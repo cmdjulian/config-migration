@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.jayway.jsonpath.JsonPath;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -29,11 +30,10 @@ public sealed interface MigrationOperation {
         }
     }
 
-    record Put(@JsonDeserialize(using = JsonPathDeserializer.class) @Nonnull JsonPath path, @Nonnull String key,
+    record Put(@JsonDeserialize(using = JsonPathDeserializer.class) @Nonnull JsonPath path, @Nullable String key,
                @Nonnull JsonNode value) implements MigrationOperation {
         public Put {
             Objects.requireNonNull(path);
-            Objects.requireNonNull(key);
             Objects.requireNonNull(value);
         }
 

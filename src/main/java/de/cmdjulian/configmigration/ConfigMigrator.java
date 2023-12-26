@@ -120,15 +120,8 @@ public class ConfigMigrator {
     }
 
     private static JsonPath joinJsonPaths(String path1, String path2) {
-        // Normalizing path1
-        if (path1.endsWith(".") || path1.endsWith("[")) {
-            path1 = path1.substring(0, path1.length() - 1);
-        }
-
-        // Normalizing path2
-        if (path2.startsWith(".") || path2.startsWith("[")) {
-            path2 = path2.substring(1);
-        }
+        if (path1.endsWith(".") || path1.endsWith("[")) path1 = path1.substring(0, path1.length() - 1);
+        if (path2.startsWith(".") || path2.startsWith("[")) path2 = path2.substring(1);
 
         return JsonPath.compile(path1 + "." + path2);
     }
@@ -186,11 +179,15 @@ public class ConfigMigrator {
         if (!pathExists(context, put.path())) {
             throw new IllegalArgumentException("value at " + put.path().getPath() + " does not exist and can not be added");
         } else {
-            JsonPath jsonPath = joinJsonPaths(put.path().getPath(), put.key());
-            if (pathExists(context, jsonPath)) {
-                throw new IllegalArgumentException("value at " + jsonPath.getPath() + " already exists and can not be added");
+            if (put.key() == null) {
+                context.add(put.path(), put.value());
             } else {
-                context.put(put.path(), put.key(), put.value());
+                JsonPath jsonPath = joinJsonPaths(put.path().getPath(), put.key());
+                if (pathExists(context, jsonPath)) {
+                    throw new IllegalArgumentException("value at " + jsonPath.getPath() + " already exists and can not be added");
+                } else {
+                    context.put(put.path(), put.key(), put.value());
+                }
             }
         }
     }
