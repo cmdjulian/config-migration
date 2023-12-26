@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import de.cmdjulian.configmigration.exceptions.MigrationFileReadException;
+import de.cmdjulian.configmigration.model.Migration;
+import de.cmdjulian.configmigration.model.MigrationOperation;
 import io.github.secretx33.resourceresolver.PathMatchingResourcePatternResolver;
 import io.github.secretx33.resourceresolver.Resource;
 import io.github.secretx33.resourceresolver.ResourcePatternResolver;
-import de.cmdjulian.configmigration.model.Migration;
-import de.cmdjulian.configmigration.model.MigrationOperation;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;

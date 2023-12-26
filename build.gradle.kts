@@ -1,9 +1,8 @@
 plugins {
     id("java")
+    `java-library`
     alias(libs.plugins.graalvm)
     alias(libs.plugins.versions)
-    application
-    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "de.cmdjulian"
@@ -30,10 +29,6 @@ dependencies {
     testImplementation(libs.junit)
 }
 
-application {
-    mainClass.set("de.cmdjulian.configmigration.Main")
-}
-
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
@@ -44,7 +39,7 @@ graalvmNative {
     }
     toolchainDetection.set(false)
     binaries {
-        all {
+        named("test") {
             resources {
                 autodetect()
                 autodetection {

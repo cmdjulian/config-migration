@@ -15,6 +15,7 @@ import de.cmdjulian.configmigration.config.MigrationProvider;
 import de.cmdjulian.configmigration.exceptions.ConfigFileIoException;
 import de.cmdjulian.configmigration.model.Migration;
 import de.cmdjulian.configmigration.model.MigrationOperation;
+import de.cmdjulian.configmigration.utils.JsonPathHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

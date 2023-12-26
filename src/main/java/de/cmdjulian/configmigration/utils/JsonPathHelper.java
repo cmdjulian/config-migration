@@ -1,4 +1,4 @@
-package de.cmdjulian.configmigration;
+package de.cmdjulian.configmigration.utils;
 
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;

@@ -3,6 +3,7 @@ package de.cmdjulian.configmigration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import de.cmdjulian.configmigration.model.MigrationOperation;
+import de.cmdjulian.configmigration.utils.JsonPathHelper;
 
 public class MigrationStepExecutor {
 
