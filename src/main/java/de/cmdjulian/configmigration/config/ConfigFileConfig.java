@@ -25,8 +25,12 @@ public interface ConfigFileConfig {
     @Nonnull
     JsonPath versionSelector();
 
+    @Nullable
+    Integer fallbackVersion();
+
     record Path(@Nonnull java.nio.file.Path path, @Nonnull ObjectMapper mapper,
-                @Nonnull JsonPath versionSelector) implements ConfigFileConfig {
+                @Nonnull JsonPath versionSelector, @Nullable Integer fallbackVersion) implements ConfigFileConfig {
+
         public Path {
             Objects.requireNonNull(path);
             Objects.requireNonNull(mapper);
@@ -34,7 +38,11 @@ public interface ConfigFileConfig {
         }
 
         public Path(@Nonnull java.nio.file.Path path, @Nonnull ObjectMapper reader) {
-            this(path, reader, JsonPath.compile("$.version"));
+            this(path, reader, null);
+        }
+
+        public Path(@Nonnull java.nio.file.Path path, @Nonnull ObjectMapper reader, @Nullable Integer fallbackVersion) {
+            this(path, reader, JsonPath.compile("$.version"), fallbackVersion);
         }
 
         @Nonnull
@@ -48,14 +56,26 @@ public interface ConfigFileConfig {
         }
     }
 
-    record Node(@Nonnull JsonNode config, @Nonnull JsonPath versionSelector) implements ConfigFileConfig {
+    record Node(@Nonnull JsonNode config, @Nonnull JsonPath versionSelector,
+                @Nullable Integer fallbackVersion) implements ConfigFileConfig {
+
         public Node {
             Objects.requireNonNull(config);
             Objects.requireNonNull(versionSelector);
         }
 
         public Node(@Nonnull JsonNode config) {
-            this(config, JsonPath.compile("$.version"));
+            this(config, null);
+        }
+
+        public Node(@Nonnull JsonNode config, @Nullable Integer fallbackVersion) {
+            this(config, JsonPath.compile("$.version"), fallbackVersion);
+        }
+
+        @Nonnull
+        @Override
+        public JsonNode config() {
+            return config.deepCopy();
         }
 
         @Nullable

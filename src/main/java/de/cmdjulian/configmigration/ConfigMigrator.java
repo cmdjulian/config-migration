@@ -2,6 +2,8 @@ package de.cmdjulian.configmigration;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.NumericNode;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -13,6 +15,8 @@ import de.cmdjulian.configmigration.config.MigrationProvider;
 import de.cmdjulian.configmigration.exceptions.ConfigFileIoException;
 import de.cmdjulian.configmigration.model.Migration;
 import de.cmdjulian.configmigration.model.MigrationOperation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -23,9 +27,13 @@ import java.util.List;
 
 public class ConfigMigrator {
 
+    private static final Logger logger = LoggerFactory.getLogger(ConfigMigrator.class);
+
     private final List<Migration> migrations;
     private final JsonNode configFile;
     private final JsonPath versionSelector;
+    private final Integer fallbackVersion;
+    private int currentVersion;
     private Path configFileLocation;
     private ObjectMapper configMapper;
     private Configuration jsonPathConfig = Configuration.builder()
@@ -41,8 +49,10 @@ public class ConfigMigrator {
         this.migrations = migrationProvider.migrations();
         this.configFileLocation = configFileConfig.path();
         this.versionSelector = configFileConfig.versionSelector();
+        this.fallbackVersion = configFileConfig.fallbackVersion();
         this.configFile = configFileConfig.config();
         this.configMapper = configFileConfig.mapper();
+        this.currentVersion = resolveCurrentVersion();
     }
 
     @Nonnull
@@ -79,116 +89,103 @@ public class ConfigMigrator {
         this.jsonPathConfig = jsonPathConfig;
     }
 
-    public int currentVersion() {
+    private int resolveCurrentVersion() {
         DocumentContext jsonContext = JsonPath.using(jsonPathConfig).parse(configFile);
 
-        return jsonContext.read(versionSelector, int.class);
-    }
-
-    public void dryRun() {
-        runMigrations(configFile.deepCopy());
-    }
-
-    public void run() {
-        var migrated = runMigrations(configFile);
-        if (configFileLocation != null && configMapper != null) {
-            try (var out = Files.newOutputStream(configFileLocation)) {
-                configMapper.writeValue(out, migrated);
-            } catch (IOException e) {
-                throw ConfigFileIoException.writeError(configFileLocation, e);
+        try {
+            var version = jsonContext.read(versionSelector, int.class);
+            logger.debug("found version in config file: {}", version);
+            return version;
+        } catch (PathNotFoundException e) {
+            if (fallbackVersion != null) {
+                logger.debug(
+                        "could not locate version in config file at {}, falling back to to version {}",
+                        versionSelector.getPath(),
+                        fallbackVersion
+                );
+                return fallbackVersion;
+            } else {
+                logger.debug("could not locate version in config file at {}", versionSelector.getPath());
+                throw e;
             }
         }
     }
 
-    private JsonNode runMigrations(JsonNode jsonNode) {
-        int appliedVersion = currentVersion();
-        var context = JsonPath.using(jsonPathConfig).parse(jsonNode);
+    /**
+     * Extracts the current version of the config file. If a version can't be extracted because the path does not exist
+     * and a fallback version is set, the fallback version is returned.
+     *
+     * @return the current schema version of the config file
+     */
+    public int currentVersion() {
+        return currentVersion;
+    }
+
+    /**
+     * Runs all migrations on a given config without actually applying it to the config file.
+     * This can be used to check if the config file can be migrated in advance.
+     */
+    public void dryRun() {
+        runMigrations(configFile.deepCopy(), null, null);
+    }
+
+    /**
+     * Runs the migration to the config file.
+     */
+    public void run() {
+        runMigrations(configFile, configFileLocation, configMapper);
+    }
+
+    private void runMigrations(JsonNode configFile, Path configFileLocation, ObjectMapper configMapper) {
+        var context = JsonPath.using(jsonPathConfig).parse(configFile);
         migrations.stream()
-                .filter(migration -> migration.number() > appliedVersion)
-                .forEach(migration -> runMigration(context, migration));
-
-        return jsonNode;
-    }
-
-    private static boolean pathExists(DocumentContext documentContext, JsonPath jsonPath) {
-        try {
-            documentContext.read(jsonPath);
-            return true;
-        } catch (PathNotFoundException e) {
-            return false;
-        }
-    }
-
-    private static JsonPath joinJsonPaths(String path1, String path2) {
-        if (path1.endsWith(".") || path1.endsWith("[")) path1 = path1.substring(0, path1.length() - 1);
-        if (path2.startsWith(".") || path2.startsWith("[")) path2 = path2.substring(1);
-
-        return JsonPath.compile(path1 + "." + path2);
+                .filter(migration -> migration.number() > currentVersion)
+                .forEach(migration -> {
+                    runMigration(context, migration);
+                    if (configFileLocation != null && configMapper != null) {
+                        try (var out = Files.newOutputStream(configFileLocation)) {
+                            configMapper.writeValue(out, context.json());
+                        } catch (IOException e) {
+                            throw ConfigFileIoException.writeError(configFileLocation, e);
+                        }
+                    }
+                });
     }
 
     private void runMigration(DocumentContext context, Migration migration) {
+        var stepMigrator = new MigrationStepExecutor(context);
+        logger.debug("starting migration: [version={}, name={}]", migration.number(), migration.name());
         for (MigrationOperation operation : migration.operations()) {
             if (operation instanceof MigrationOperation.Delete delete) {
-                runDeleteMigration(context, delete);
+                stepMigrator.runDeleteMigration(delete);
             } else if (operation instanceof MigrationOperation.Put put) {
-                runPutMigration(context, put);
+                stepMigrator.runPutMigration(put);
             } else if (operation instanceof MigrationOperation.Rename rename) {
-                runRenameMigration(context, rename);
+                stepMigrator.runRenameMigration(rename);
             } else if (operation instanceof MigrationOperation.Set set) {
-                runSetMigration(context, set);
+                stepMigrator.runSetMigration(set);
             } else {
                 throw new IllegalStateException();
             }
         }
+
+        setCurrentVersionNumber(stepMigrator, migration);
     }
 
-    private static void runSetMigration(DocumentContext context, MigrationOperation.Set set) {
-        if (pathExists(context, set.path())) {
-            context.set(set.path(), set.value());
-        } else {
-            throw new IllegalArgumentException("value at " + set.path().getPath() + " does not exist and therefore can't be updated");
-        }
-    }
+    private void setCurrentVersionNumber(MigrationStepExecutor executor, Migration migration) {
+        NumericNode versionNode = JsonNodeFactory.instance.numberNode(migration.number());
 
-    private static void runRenameMigration(DocumentContext context, MigrationOperation.Rename rename) {
-        if (!pathExists(context, rename.path())) {
-            throw new IllegalArgumentException("value at " + rename.path().getPath() + " does not exist and can not be renamed");
+        if (executor.pathExists(versionSelector)) {
+            logger.debug("updating existing version field on config");
+            MigrationOperation.Set operation = new MigrationOperation.Set(versionSelector, versionNode);
+            executor.runSetMigration(operation);
         } else {
-            JsonPath jsonPathOldKey = joinJsonPaths(rename.path().getPath(), rename.oldKey());
-            JsonPath jsonPathNewKey = joinJsonPaths(rename.path().getPath(), rename.newKey());
-            if (!pathExists(context, jsonPathOldKey)) {
-                throw new IllegalArgumentException("value at " + jsonPathOldKey.getPath() + " does not exist and can not be renamed");
-            }
-            if (pathExists(context, jsonPathNewKey)) {
-                throw new IllegalArgumentException("value at " + jsonPathNewKey.getPath() + " exists and can not be used to be renamed to");
-            } else {
-                context.renameKey(rename.path(), rename.oldKey(), rename.newKey());
-            }
+            logger.debug("putting version field into config");
+            var split = JsonPathHelper.extractKeyFromJsonPath(versionSelector);
+            MigrationOperation.Put operation = new MigrationOperation.Put(split.path(), split.key(), versionNode);
+            executor.runPutMigration(operation);
         }
-    }
 
-    private static void runDeleteMigration(DocumentContext context, MigrationOperation.Delete delete) {
-        if (pathExists(context, delete.path())) {
-            context.delete(delete.path());
-        } else {
-            throw new IllegalArgumentException("value at " + delete.path().getPath() + " does not exist and therefore can't be deleted");
-        }
-    }
-
-    private static void runPutMigration(DocumentContext context, MigrationOperation.Put put) {
-        if (!pathExists(context, put.path())) {
-            throw new IllegalArgumentException("value at " + put.path().getPath() + " does not exist and can not be added");
-        } else {
-            if (put.key() == null) {
-                context.add(put.path(), put.value());
-            } else {
-                JsonPath jsonPath = joinJsonPaths(put.path().getPath(), put.key());
-                if (pathExists(context, jsonPath)) {
-                    throw new IllegalArgumentException("value at " + jsonPath.getPath() + " already exists and can not be added");
-                } else {
-                    context.put(put.path(), put.key(), put.value());
-                }
-            }
-        }
+        this.currentVersion = migration.number();
     }
 }

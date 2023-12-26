@@ -1,2 +1,2 @@
-rootProject.name = "playful-leshy"
+rootProject.name = "config-migrator"
 

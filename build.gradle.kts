@@ -1,12 +1,13 @@
 plugins {
     id("java")
-    id("org.graalvm.buildtools.native") version "0.9.28"
+    alias(libs.plugins.graalvm)
+    alias(libs.plugins.versions)
     application
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "de.cmdjulian"
-version = "1.0-SNAPSHOT"
+version = "1.0"
 
 repositories {
     mavenCentral()
@@ -19,20 +20,21 @@ java {
 }
 
 dependencies {
+    compileOnly(libs.spotbugs)
+
     implementation(libs.bundles.jackson)
     implementation(libs.jsonPath)
     implementation(libs.resourceResolver)
-    compileOnly(libs.spotbugs)
+    implementation(libs.slf4j)
 
-    testImplementation(platform("org.junit:junit-bom:5.9.1"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(libs.junit)
 }
 
 application {
     mainClass.set("de.cmdjulian.configmigration.Main")
 }
 
-tasks.test {
+tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
 
