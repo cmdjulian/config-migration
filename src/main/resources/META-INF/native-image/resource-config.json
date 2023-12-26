@@ -1,0 +1,25 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": "\\QMETA-INF/services/java.time.zone.ZoneRulesProvider\\E"
+      },
+      {
+        "pattern": "\\Qconfig.yaml\\E"
+      },
+      {
+        "pattern": "\\Qmigrations/V1__test.yaml\\E"
+      },
+      {
+        "pattern": "\\Qmigrations/V2__test.yaml\\E"
+      },
+      {
+        "pattern": "\\Qmigrations/\\E"
+      },
+      {
+        "pattern": "\\Qorg/slf4j/impl/StaticLoggerBinder.class\\E"
+      }
+    ]
+  },
+  "bundles": []
+}

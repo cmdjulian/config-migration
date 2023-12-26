@@ -1,0 +1,21 @@
+[versions]
+jackson = "2.16.0"
+
+[libraries]
+# jackson
+databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+jdk8 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jdk8", version.ref = "jackson" }
+jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
+parameters = { module = "com.fasterxml.jackson.module:jackson-module-parameter-names", version.ref = "jackson" }
+yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
+# json-path
+jsonPath = { module = "com.jayway.jsonpath:json-path", version = "2.8.0" }
+resourceResolver = { module = "io.github.secretx33:path-matching-resource-pattern-resolver", version = "0.1" }
+# nullness annotations
+spotbugs = { module = "com.github.spotbugs:spotbugs-annotations", version = "4.8.3" }
+
+[bundles]
+jackson = ["databind", "jdk8", "jsr310", "parameters", "yaml"]
+
+[plugins]
+versions = { id = "com.github.ben-manes.versions", version = "0.45.0" }

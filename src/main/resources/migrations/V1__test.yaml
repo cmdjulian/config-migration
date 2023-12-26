@@ -1,0 +1,13 @@
+- type: put
+  path: '$'
+  key: test
+  value: { foo: 'bar', fizz: 'buzz' }
+- type: delete
+  path: '$'
+- type: set
+  path: '$'
+  value: null
+- type: rename
+  path: '$'
+  oldKey: 'old-test'
+  newKey: 'new-test'

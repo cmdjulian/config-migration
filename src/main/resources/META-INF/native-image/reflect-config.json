@@ -1,0 +1,135 @@
+[
+  {
+    "name": "[Lio.github.secretx33.resourceresolver.ConcurrentReferenceHashMap$Segment;"
+  },
+  {
+    "name": "com.fasterxml.jackson.databind.ext.Java7SupportImpl",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name": "de.cmdjulian.configmigration.model.JsonPathDeserializer",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name": "de.cmdjulian.configmigration.model.MigrationOperation",
+    "queryAllDeclaredMethods": true
+  },
+  {
+    "name": "de.cmdjulian.configmigration.model.MigrationOperation$Delete",
+    "allDeclaredFields": true,
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true,
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "com.jayway.jsonpath.JsonPath"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "de.cmdjulian.configmigration.model.MigrationOperation$Put",
+    "allDeclaredFields": true,
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true,
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "com.jayway.jsonpath.JsonPath",
+          "java.lang.String",
+          "com.fasterxml.jackson.databind.JsonNode"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "de.cmdjulian.configmigration.model.MigrationOperation$Rename",
+    "allDeclaredFields": true,
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true,
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "com.jayway.jsonpath.JsonPath",
+          "java.lang.String",
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "de.cmdjulian.configmigration.model.MigrationOperation$Set",
+    "allDeclaredFields": true,
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true,
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "com.jayway.jsonpath.JsonPath",
+          "com.fasterxml.jackson.databind.JsonNode"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "java.lang.Class",
+    "methods": [
+      {
+        "name": "getRecordComponents",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name": "java.lang.Record",
+    "allDeclaredFields": true,
+    "queryAllDeclaredMethods": true
+  },
+  {
+    "name": "java.lang.reflect.RecordComponent",
+    "methods": [
+      {
+        "name": "getName",
+        "parameterTypes": []
+      },
+      {
+        "name": "getType",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name": "java.sql.Date"
+  },
+  {
+    "name": "java.sql.Timestamp"
+  },
+  {
+    "name": "java.util.concurrent.atomic.AtomicReference",
+    "fields": [
+      {
+        "name": "value"
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.core.runtime$FileLocator"
+  },
+  {
+    "name": "org.eclipse.core.runtime.FileLocator"
+  }
+]
